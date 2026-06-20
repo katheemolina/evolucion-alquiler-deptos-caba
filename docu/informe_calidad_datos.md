@@ -374,6 +374,88 @@ Las siguientes preguntas guían las visualizaciones y el dashboard del TFI:
 
 ---
 
+## 8. Evaluación de la validez del dataset
+
+### 8.1 Dimensiones de calidad
+
+**Completitud**
+
+La variable más crítica del dataset maestro, `precio_promedio_pesos`, presenta un **15,82 % de valores faltantes** en el período analizado (2018-Q1 a 2026-Q2). La distribución no es uniforme: la Comuna 8 alcanza el **98 % de faltantes** (prácticamente sin precio publicado en todo el período), la Comuna 9 registra el 52 % y la Comuna 4 el 36,3 %. Las comunas con mayor ausencia son zonas con menor volumen de oferta formal en Argenprop; el faltante no representa un error de carga sino una limitación estructural de la fuente. Los indicadores derivados (`ratio_alquiler_sueldo_pct`, `meses_sueldo_para_alquiler`) heredan el mismo 15,82 % de ausencias al depender del precio.
+
+En el componente salarial, **9 meses** de la serie mensual (5,8 % de los registros del dataset barrios) fueron completados por interpolación lineal ante la ausencia de escala publicada; quedan marcados con `sueldo_interpolado = True`.
+
+**Consistencia**
+
+Los archivos fuente presentaron tres clases de inconsistencias corregidas durante la integración:
+- Encoding roto en nombres de barrio (`NUÃ'EZ` → `Núñez`) por exportaciones ISO-8859-1 mal interpretadas.
+- Variantes para la misma entidad geográfica (`Montserrat` / `Monserrat`, `La Paternal` / `Paternal`, `Agronomia` / `Agronomía`) que, sin normalización, habrían generado 50 barrios únicos en lugar de 48.
+- Uso de `///` como código de confidencialidad en celdas de precio (muestra insuficiente según IDECBA), en lugar de celda vacía convencional.
+
+Tras la normalización, el dataset maestro no presenta duplicados en su clave compuesta (`comuna`, `periodo_trim`, `ambientes`) y el join barrio→comuna resolvió el 100 % de los registros sin dejar sin match.
+
+**Exactitud**
+
+Un **11,8 % de las observaciones** (180 registros) están marcadas como `provisorio = True`, indicando que el IDECBA publicó esos valores con asterisco, sujetos a revisión posterior. Corresponden principalmente a los trimestres más recientes (2025–2026). La alta dispersión de precios (media $207.808, mediana $53.751, desvío estándar $269.728) refleja la inflación acumulada del período, no errores de carga.
+
+El sueldo básico de Administrativo A (SEC La Plata) es un **proxy sectorial**: representa el mínimo de convenio del sector comercio de La Plata, no el ingreso real del inquilino promedio en CABA ni variaciones geográficas intraurbanas. Los ratios de accesibilidad calculados son indicadores de tendencia, no medidas exactas de esfuerzo económico individual.
+
+**Unicidad**
+
+El dataset maestro registra **0 duplicados** en su clave primaria lógica, verificado mediante `df.duplicated(subset=["comuna","periodo_trim","ambientes"]).sum()`. La normalización de nombres de barrio consolidó correctamente 50 entradas en 48 barrios únicos.
+
+**Oportunidad**
+
+Al momento de obtención (junio 2026), la serie de precios llegaba hasta 2026-Q2 y la salarial hasta julio 2026. El dataset está prácticamente actualizado al momento de entrega, aunque los trimestres más recientes deben interpretarse con precaución por su marcación de provisoriedad.
+
+### 8.2 Limitaciones y alcance
+
+1. **Cobertura geográfica sesgada hacia el norte:** las comunas 4, 8 y 9 —con mayor vulnerabilidad habitacional— tienen cobertura escasa o nula. El análisis refleja el mercado formal de alquiler en las zonas con mayor densidad de publicaciones (norte y centro de la ciudad).
+2. **Fuente única de precios:** los valores provienen exclusivamente de Argenprop (desde 2015), capturando la oferta formal publicada pero excluyendo el mercado informal y otras plataformas.
+3. **Sueldo como proxy:** el básico de Administrativo A es un indicador de referencia formal; los ratios alquiler/sueldo deben leerse como indicadores de tendencia, no como medida exacta del esfuerzo económico de los inquilinos reales.
+4. **Supuesto de homogeneidad en superficie promedio:** `cantidad_deptos_estimada` asume que la superficie promedio publicada a nivel ciudad aplica uniformemente a todos los barrios, lo que puede sobreestimar la oferta en zonas de unidades pequeñas y subestimarla en zonas con unidades más grandes.
+5. **Precios nominales no deflactados:** las comparaciones entre períodos distantes deben realizarse sobre el ratio alquiler/sueldo o deflactando por IPC; los valores nominales reflejan tanto la dinámica del mercado como la inflación general.
+
+---
+
+## 9. Conclusiones preliminares
+
+### 9.1 ¿Qué comprendemos a partir de los datos?
+
+**Los precios nominales de alquiler crecieron aproximadamente 70 veces entre 2018 y 2026.** El incremento fue generalizado en todas las comunas y tipologías, dominado por la inflación argentina del período. Sin embargo, las diferencias de nivel entre comunas se mantuvieron estables: las del norte duplican o triplican el precio de las del sur a lo largo de toda la serie.
+
+**Las comunas del norte (13, 14 y 2) concentran la mayor oferta y los precios más altos.** El análisis de superficie publicada muestra que Palermo, Recoleta, Belgrano y Núñez dominan el mercado formal de alquileres, tanto en volumen como en precio. La correlación positiva moderada entre oferta y precio por comuna (r = 0,73) indica que mayor oferta publicada no implica menores precios: la oferta formal está geográficamente segmentada y se concentra donde los precios son más elevados.
+
+**La accesibilidad habitacional es estructuralmente comprometida durante todo el período.** El alquiler de un monoambiente nunca bajó del 30 % del sueldo básico de Administrativo A en ningún trimestre analizado. La mediana del ratio es 46,7 %, y en el punto de mayor tensión (2023-Q3, Comuna 14) el alquiler representó el 108,2 % del sueldo básico, superando un salario completo. Este valor supera ampliamente el umbral del 30 % utilizado internacionalmente como referencia de asequibilidad habitacional.
+
+### 9.2 ¿Qué información relevante obtuvimos en este primer estudio?
+
+- El dataset integrado es **suficientemente válido** para analizar tendencias de precios por comuna y accesibilidad habitacional relativa, siempre que la Comuna 8 —con el 98 % de faltantes en precio— quede documentada como no representativa para comparaciones de precio.
+- La **integración de múltiples fuentes** fue imprescindible: ninguna fuente individual permitía responder las tres preguntas de análisis. La combinación de precios por comuna, superficie por barrio, superficie promedio a nivel ciudad y sueldo de referencia sector es lo que hace posible el indicador de accesibilidad.
+- Los **problemas de calidad detectados** (encoding roto, variantes de nombres, códigos `///`, granularidades distintas) son representativos de los desafíos habituales en datos abiertos de organismos públicos: los datos reales requieren limpieza real, y esa limpieza debe documentarse y justificarse.
+- La **brecha estructural entre alquiler y salario** es el hallazgo más significativo del estudio. Constituye un punto de partida para investigaciones más profundas que incorporen IPC para análisis de poder adquisitivo real, ingresos medianos por zona o datos del mercado informal de alquileres.
+
+---
+
+## Referencias bibliográficas
+
+**Fuentes de datos**
+
+- Instituto de Estadística y Censos de Buenos Aires (IDECBA) / Gobierno de la Ciudad de Buenos Aires. *Banco de Datos — Mercado inmobiliario: precio promedio y superficie de departamentos en alquiler en CABA*. Recuperado el 9 de junio de 2026. Disponible en: https://www.estadisticaciudad.gob.ar/eyc/categoria-banco-datos/mercado-inmobiliario/
+
+- Buenos Aires Data — Gobierno de la Ciudad de Buenos Aires. *Dataset Barrios: tabla de equivalencia barrio ↔ comuna*. Recuperado el 9 de junio de 2026. Disponible en: https://data.buenosaires.gob.ar/dataset/barrios
+
+- Sindicato de Empleados de Comercio de La Plata (SEC La Plata). *Escalas salariales — Convenio Colectivo de Trabajo 130/75, categoría Administrativo A, básico mensual*. Recuperado el 15 de junio de 2026. Disponible en: https://www.seclaplata.org.ar/gremiales/escalasalarial
+
+**Bibliografía metodológica**
+
+- Knaflic, C. N. (2015). *Storytelling with data: a data visualization guide for business professionals*. Wiley.
+
+- Okabe, M., & Ito, K. (2002). *Color universal design (CUD): How to make figures and presentations that are friendly to colorblind people*. J-fly. Disponible en: https://jfly.uni-koeln.de/color/
+
+- Few, S. (2012). *Show me the numbers: Designing tables and graphs to enlighten* (2.ª ed.). Analytics Press.
+
+---
+
 ## Archivos generados
 
 | Archivo | Descripción |
