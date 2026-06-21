@@ -19,6 +19,10 @@ export function Filtros({ filtros, setFiltros, anios, animMs, setAnimMs }: Props
   const velocidad =
     animMs === 0 ? "Instantánea" : animMs <= 300 ? "Rápida" : animMs <= 700 ? "Media" : "Suave"
 
+  // Resaltado verde claro para el estado seleccionado
+  const ambCls =
+    "px-4 data-[state=on]:border-green-400 data-[state=on]:bg-green-100 data-[state=on]:text-green-800 data-[state=on]:hover:bg-green-100"
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-5 md:flex-row md:flex-wrap md:items-end md:gap-8">
@@ -35,9 +39,9 @@ export function Filtros({ filtros, setFiltros, anios, animMs, setAnimMs }: Props
             }
             variant="outline"
           >
-            <ToggleGroupItem value="1" className="px-4">1 amb.</ToggleGroupItem>
-            <ToggleGroupItem value="2" className="px-4">2 amb.</ToggleGroupItem>
-            <ToggleGroupItem value="3" className="px-4">3 amb.</ToggleGroupItem>
+            <ToggleGroupItem value="1" className={ambCls}>1 amb.</ToggleGroupItem>
+            <ToggleGroupItem value="2" className={ambCls}>2 amb.</ToggleGroupItem>
+            <ToggleGroupItem value="3" className={ambCls}>3 amb.</ToggleGroupItem>
           </ToggleGroup>
         </div>
 

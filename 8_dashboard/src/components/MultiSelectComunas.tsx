@@ -38,13 +38,17 @@ export function MultiSelectComunas({ value, onChange, options }: Props) {
               <span className="px-1 text-muted-foreground">Todas las comunas</span>
             ) : (
               value.map((c) => (
-                <Badge key={c} variant="secondary" className="gap-1 px-2 py-0.5 font-normal">
+                <Badge
+                  key={c}
+                  variant="secondary"
+                  className="gap-1 border-green-300 bg-green-100 px-2 py-0.5 font-normal text-green-800"
+                >
                   Comuna {c}
                   <span
                     role="button"
                     tabIndex={-1}
                     aria-label={`Quitar comuna ${c}`}
-                    className="rounded-sm hover:bg-muted-foreground/20"
+                    className="rounded-sm hover:bg-green-700/20"
                     onClick={(e) => {
                       e.stopPropagation()
                       quitar(c)
