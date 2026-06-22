@@ -449,9 +449,7 @@ Al momento de obtención (junio 2026), la serie de precios llegaba hasta 2026-Q2
 **Bibliografía metodológica**
 
 - Knaflic, C. N. (2015). *Storytelling with data: a data visualization guide for business professionals*. Wiley.
-
 - Okabe, M., & Ito, K. (2002). *Color universal design (CUD): How to make figures and presentations that are friendly to colorblind people*. J-fly. Disponible en: https://jfly.uni-koeln.de/color/
-
 - Few, S. (2012). *Show me the numbers: Designing tables and graphs to enlighten* (2.ª ed.). Analytics Press.
 
 ---
